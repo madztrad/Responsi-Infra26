@@ -29,6 +29,7 @@ Beberapa service tidak saling terhubung: Nginx tidak dapat mencapai `web1`/`web3
 - Samakan password `DB_PASS` pada web service menjadi `student123` sesuai `MYSQL_PASSWORD`.
 - Perbaiki build context `./web33` → `./web3` dan tambahkan `frontend` network ke `web3` agar dapat di-loadbalanced oleh Nginx.
 - Samakan nama volume: gunakan `db-data:` di bagian `volumes:` root, atau ubah service untuk menggunakan `database-data:`; pilih salah satu nama dan konsisten.
+
 ---
 
 ## Permasalahan 3
@@ -52,6 +53,7 @@ upstream backend {
 ```
 
 ---
+
 ## Permasalahan 4
 
 ### Gejala
@@ -68,6 +70,7 @@ USE responsi;
 CREATE TABLE IF NOT EXISTS students (...);
 INSERT INTO students ...;
 ```
+
 ---
 
 ## Permasalahan 5
@@ -83,3 +86,58 @@ Build image untuk `web1` atau `web3` gagal karena base image tidak ditemukan, at
 ### Solusi
 - Perbaiki base image menjadi `php:8.2-apache` pada semua Dockerfile web.
 - Ubah atau hapus `EXPOSE 8080`; jika ingin eksplisit gunakan `EXPOSE 80`.
+---
+
+## Permasalahan 6
+
+### Gejala
+Container `mysql-db` gagal start dengan error:
+```
+Attaching to mysql-db
+mysql-db | Fatal glibc error: CPU does not support x86-64-v2
+```
+
+### Penyebab
+Image MySQL `8.0` atau `8.0.28` dibangun dengan optimisasi glibc yang membutuhkan instruction set x86-64-v2, yang tidak didukung oleh host/VM yang digunakan.
+
+### Solusi
+Ganti base image pada `db/Dockerfile` ke versi yang lebih kompatibel:
+```dockerfile
+FROM mysql:8.0.28
+```
+
+
+Rebuild container:
+```bash
+docker compose down
+docker compose build --no-cache db
+docker compose up -d
+```
+
+---
+
+## Permasalahan 7
+
+### Gejala
+Container `nginx-lb` start tetapi Nginx daemon gagal dengan error:
+```
+[emerg] unknown directive "nginx" in /etc/nginx/nginx.conf:2
+nginx: [emerg] unknown directive "nginx" in /etc/nginx/nginx.conf:2
+```
+
+### Penyebab
+File `nginx/nginx.conf` memiliki baris `nginx` di baris pertama yang tidak valid (artifact atau kesalahan saat copy).
+
+### Solusi
+Baris `nginx` di awal file `nginx/nginx.conf` sudah dihapus. Rebuild image Nginx dengan cache clear:
+```bash
+docker compose down
+docker compose build --no-cache nginx
+docker compose up -d
+```
+
+Verifikasi:
+```bash
+docker compose logs nginx
+docker compose ps
+```

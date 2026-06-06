@@ -28,7 +28,7 @@ NIM:
 
 <p>
 Container:
-<strong><WEB-3></WEB-3></strong>
+<strong>WEB-3</strong>
 </p>
 
 </body>

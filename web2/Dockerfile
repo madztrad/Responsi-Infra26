@@ -4,4 +4,4 @@ WORKDIR /var/www/html
 
 COPY . .
 
-EXPOSE 8080
+EXPOSE 80

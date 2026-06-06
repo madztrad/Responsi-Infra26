@@ -1,7 +1,7 @@
-FROM php:8.2-apach
+FROM php:8.2-apache
 
 WORKDIR /var/www/html
 
 COPY . .
 
-EXPOSE 8080
+EXPOSE 80
